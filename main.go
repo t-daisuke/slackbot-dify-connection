@@ -2,14 +2,26 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
 
+	"github.com/joho/godotenv"
 	"github.com/slack-go/slack"
 )
 
 func main() {
-	// 環境変数からSlackトークンを取得
+	// .envファイルを読み込む
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatalf("Error loading .env file")
+	}
+
+	// .envファイルからSLACK_BOT_TOKENを取得
 	token := os.Getenv("SLACK_BOT_TOKEN")
+	if token == "" {
+		log.Fatalf("SLACK_BOT_TOKEN is not set in .env file")
+	}
+
 	api := slack.New(token)
 
 	// WebSocketを使ってリアルタイムでイベントを処理
