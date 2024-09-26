@@ -7,9 +7,6 @@ difyのアプリをslackbotとして使いたいと思って作りました。
 - goを入れてください
 - slackの管理者に問い合わせは必要です。
 
-# Ref
-https://zenn.dev/replica/articles/34b7fa8d667ec6
-
 
 # How to connect Slack
 
