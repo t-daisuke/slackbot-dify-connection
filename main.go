@@ -20,6 +20,7 @@ import (
 var (
 	conversationID = ""
 	apiKey         string
+	difyAPIURL     string
 )
 
 func main() {
@@ -48,6 +49,7 @@ func loadEnv() (string, string) {
 	appToken := os.Getenv("SLACK_APP_TOKEN") // xapp-で始まるトークン
 	botToken := os.Getenv("SLACK_BOT_TOKEN") // xoxb-で始まるトークン
 	apiKey = os.Getenv("DIFY_API_KEY")       // DifyのAPIキー
+	difyAPIURL = os.Getenv("DIFY_API_URL")   // DifyのAPI URL
 
 	if appToken == "" {
 		log.Fatalf("SLACK_APP_TOKEN is not set in .env file")
@@ -181,7 +183,7 @@ func callDifyAPI(query string, userID string) (string, error) {
 	fmt.Printf("Request body: %s\n", string(jsonData))
 
 	// HTTPリクエストを作成
-	req, err := http.NewRequest("POST", "https://dify.pepalab.com/v1/chat-messages", bytes.NewBuffer(jsonData))
+	req, err := http.NewRequest("POST", difyAPIURL, bytes.NewBuffer(jsonData))
 	if err != nil {
 		fmt.Printf("Failed to create HTTP request: %v\n", err)
 		return "", err
