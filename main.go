@@ -1,8 +1,12 @@
 package main
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
+	"net/http"
 	"os"
 	"strings"
 
@@ -10,6 +14,15 @@ import (
 	"github.com/slack-go/slack"
 	"github.com/slack-go/slack/slackevents"
 	"github.com/slack-go/slack/socketmode"
+)
+
+// グローバル変数の定義
+var (
+	inputs         = map[string]interface{}{}
+	responseMode   = "streaming"
+	conversationID = ""
+	userID         = ""
+	apiKey         string
 )
 
 func main() {
@@ -37,12 +50,16 @@ func loadEnv() (string, string) {
 
 	appToken := os.Getenv("SLACK_APP_TOKEN") // xapp-で始まるトークン
 	botToken := os.Getenv("SLACK_BOT_TOKEN") // xoxb-で始まるトークン
+	apiKey = os.Getenv("API_KEY")            // DifyのAPIキー
 
 	if appToken == "" {
 		log.Fatalf("SLACK_APP_TOKEN is not set in .env file")
 	}
 	if botToken == "" {
 		log.Fatalf("SLACK_BOT_TOKEN is not set in .env file")
+	}
+	if apiKey == "" {
+		log.Fatalf("API_KEY is not set in .env file")
 	}
 	fmt.Println("Tokens retrieved successfully.")
 
@@ -128,12 +145,83 @@ func handleAppMentionEvent(ev *slackevents.AppMentionEvent, api *slack.Client, b
 	text = strings.Replace(text, "<@"+botUserID+">", "", -1)
 	text = strings.TrimSpace(text)
 
-	// テキストを"*"に変換
-	maskedText := strings.Repeat("*", len(text))
+	// Dify APIにリクエストを送信
+	answer, err := callDifyAPI(text)
+	if err != nil {
+		// エラーが発生した場合、「アプリに問題が発生しました」と返信
+		_, _, err := api.PostMessage(ev.Channel, slack.MsgOptionText("アプリに問題が発生しました", false), slack.MsgOptionTS(ev.TimeStamp))
+		if err != nil {
+			fmt.Printf("Failed to send error message: %v\n", err)
+		}
+		return
+	}
 
-	// メンションしたユーザーにスレッドで返信
-	_, _, err := api.PostMessage(ev.Channel, slack.MsgOptionText(maskedText, false), slack.MsgOptionTS(ev.TimeStamp))
+	// Dify APIからの回答を返信
+	_, _, err = api.PostMessage(ev.Channel, slack.MsgOptionText(answer, false), slack.MsgOptionTS(ev.TimeStamp))
 	if err != nil {
 		fmt.Printf("Failed to send message: %v\n", err)
 	}
+}
+
+// Dify APIへのリクエスト
+func callDifyAPI(query string) (string, error) {
+	// リクエストボディを作成
+	requestBody := map[string]interface{}{
+		"inputs":          inputs,
+		"query":           query,
+		"response_mode":   responseMode,
+		"conversation_id": conversationID,
+		"user":            userID,
+	}
+
+	jsonData, err := json.Marshal(requestBody)
+	if err != nil {
+		fmt.Printf("Failed to marshal request body: %v\n", err)
+		return "", err
+	}
+
+	// HTTPリクエストを作成
+	req, err := http.NewRequest("POST", "https://dify.pepalab.com/v1/chat-messages", bytes.NewBuffer(jsonData))
+	if err != nil {
+		fmt.Printf("Failed to create HTTP request: %v\n", err)
+		return "", err
+	}
+
+	// ヘッダーを設定
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+apiKey)
+
+	// HTTPクライアントでリクエストを送信
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Printf("Failed to send HTTP request: %v\n", err)
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	// ステータスコードをチェック
+	if resp.StatusCode != http.StatusOK {
+		fmt.Printf("Received non-OK HTTP status: %s\n", resp.Status)
+		return "", fmt.Errorf("non-OK HTTP status: %s", resp.Status)
+	}
+
+	// レスポンスボディを読み取る
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Printf("Failed to read response body: %v\n", err)
+		return "", err
+	}
+
+	// レスポンスをパース
+	var responseData struct {
+		Answer string `json:"answer"`
+	}
+	err = json.Unmarshal(body, &responseData)
+	if err != nil {
+		fmt.Printf("Failed to unmarshal response: %v\n", err)
+		return "", err
+	}
+
+	return responseData.Answer, nil
 }
