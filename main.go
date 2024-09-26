@@ -146,7 +146,7 @@ func handleAppMentionEvent(ev *slackevents.AppMentionEvent, api *slack.Client, b
 	text = strings.TrimSpace(text)
 
 	// Dify APIにリクエストを送信
-	answer, err := callDifyAPI(text)
+	answer, err := callDifyAPI(text, ev.User)
 	if err != nil {
 		// エラーが発生した場合、「アプリに問題が発生しました」と返信
 		_, _, err := api.PostMessage(ev.Channel, slack.MsgOptionText("アプリに問題が発生しました", false), slack.MsgOptionTS(ev.TimeStamp))
@@ -164,21 +164,23 @@ func handleAppMentionEvent(ev *slackevents.AppMentionEvent, api *slack.Client, b
 }
 
 // Dify APIへのリクエスト
-func callDifyAPI(query string) (string, error) {
+func callDifyAPI(query string, userID string) (string, error) {
 	// リクエストボディを作成
 	requestBody := map[string]interface{}{
-		"inputs":          inputs,
-		"query":           query,
-		"response_mode":   responseMode,
-		"conversation_id": conversationID,
-		"user":            userID,
+		"query":         query,
+		"response_mode": "blocking",
+		"user":          userID,
 	}
 
+	// JSONにシリアライズ
 	jsonData, err := json.Marshal(requestBody)
 	if err != nil {
 		fmt.Printf("Failed to marshal request body: %v\n", err)
 		return "", err
 	}
+
+	// リクエストボディを表示
+	fmt.Printf("Request body: %s\n", string(jsonData))
 
 	// HTTPリクエストを作成
 	req, err := http.NewRequest("POST", "https://dify.pepalab.com/v1/chat-messages", bytes.NewBuffer(jsonData))
@@ -200,12 +202,6 @@ func callDifyAPI(query string) (string, error) {
 	}
 	defer resp.Body.Close()
 
-	// ステータスコードをチェック
-	if resp.StatusCode != http.StatusOK {
-		fmt.Printf("Received non-OK HTTP status: %s\n", resp.Status)
-		return "", fmt.Errorf("non-OK HTTP status: %s", resp.Status)
-	}
-
 	// レスポンスボディを読み取る
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
@@ -213,15 +209,30 @@ func callDifyAPI(query string) (string, error) {
 		return "", err
 	}
 
+	// ステータスコードをチェック
+	if resp.StatusCode != http.StatusOK {
+		// エラーメッセージを表示
+		fmt.Printf("Received non-OK HTTP status: %s\nResponse body: %s\n", resp.Status, string(body))
+		return "", fmt.Errorf("non-OK HTTP status: %s", resp.Status)
+	}
+
 	// レスポンスをパース
 	var responseData struct {
-		Answer string `json:"answer"`
+		Answer         string                 `json:"answer"`
+		MessageID      string                 `json:"message_id"`
+		ConversationID string                 `json:"conversation_id"`
+		Mode           string                 `json:"mode"`
+		Metadata       map[string]interface{} `json:"metadata"`
+		CreatedAt      int64                  `json:"created_at"`
 	}
 	err = json.Unmarshal(body, &responseData)
 	if err != nil {
 		fmt.Printf("Failed to unmarshal response: %v\n", err)
 		return "", err
 	}
+
+	// 会話IDを更新（必要に応じて）
+	conversationID = responseData.ConversationID
 
 	return responseData.Answer, nil
 }
