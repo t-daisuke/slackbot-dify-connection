@@ -19,6 +19,7 @@ https://zenn.dev/replica/articles/34b7fa8d667ec6
 4. Basic InformationでApp-Level Tokenを作る。
 5. OAuth & Permissionsで必要な権限をつけてBOT_USER_OAUTH_TOKEN, USER_OAUTH_TOKENを取得する。
 6. それぞれ.env_exampleをコピーして.envを作成して、tokenを設定する。
+7. Event SubscriptionでSubscribe to bot eventsを選択する。
 
 Goのコードに移る前に、Slack側でボットの設定を行います。
 
