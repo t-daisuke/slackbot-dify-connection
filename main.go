@@ -164,6 +164,7 @@ func handleAppMentionEvent(ev *slackevents.AppMentionEvent, api *slack.Client, b
 func callDifyAPI(query string, userID string) (string, error) {
 	// リクエストボディを作成
 	requestBody := map[string]interface{}{
+		"inputs":        map[string]interface{}{}, // 空のオブジェクト
 		"query":         query,
 		"response_mode": "blocking",
 		"user":          userID,
