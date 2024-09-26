@@ -94,7 +94,7 @@ func main() {
 			}
 		default:
 			// その他のイベントタイプを無視
-			fmt.Printf("Ignored event: %v\n", evt.Type)
+			// fmt.Printf("Ignored event: %v\n", evt.Type)
 		}
 	}
 }
