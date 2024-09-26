@@ -10,7 +10,7 @@ difyのアプリをslackbotとして使いたいと思って作りました。
 
 # How to connect Slack
 
-1. Slack APIの管理ページ(https://api.slack.com/apps?new_app=1)にアクセスし、新しいアプリを作成します。
+1.  [Slack APIの管理ページ](https://api.slack.com/apps?new_app=1)にアクセスし、新しいアプリを作成します。
 2. Createを選ぶ
 3. Socket ModeをONにする。名前を入れないとtoken作れない。
 4. Basic InformationでApp-Level Tokenを作る。これをSLACK_APP_TOKENに設定する。
