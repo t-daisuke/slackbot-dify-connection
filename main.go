@@ -85,8 +85,8 @@ func main() {
 					// テキストを"*"に変換
 					maskedText := strings.Repeat("*", len(text))
 
-					// メンションしたユーザーに返信
-					_, _, err := api.PostMessage(ev.Channel, slack.MsgOptionText(maskedText, false))
+					// メンションしたユーザーにスレッドで返信
+					_, _, err := api.PostMessage(ev.Channel, slack.MsgOptionText(maskedText, false), slack.MsgOptionTS(ev.TimeStamp))
 					if err != nil {
 						fmt.Printf("Failed to send message: %v\n", err)
 					}
