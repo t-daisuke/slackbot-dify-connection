@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 
 	"github.com/joho/godotenv"
 	"github.com/slack-go/slack"
@@ -29,6 +30,14 @@ func main() {
 	api := slack.New(token)
 	fmt.Println("Slack API client initialized.")
 
+	// ボットのユーザーIDを取得
+	authTest, err := api.AuthTest()
+	if err != nil {
+		log.Fatalf("Failed to get bot user ID: %v", err)
+	}
+	botUserID := authTest.UserID
+	fmt.Printf("Bot User ID: %s\n", botUserID)
+
 	// WebSocketを使ってリアルタイムでイベントを処理
 	rtm := api.NewRTM()
 	go rtm.ManageConnection()
@@ -36,17 +45,28 @@ func main() {
 
 	// イベントを処理するループ
 	for msg := range rtm.IncomingEvents {
-		fmt.Println("Event received: ", msg)
+		//fmt.Println("Event received: ", msg)
 
 		switch ev := msg.Data.(type) {
 		case *slack.MessageEvent:
 			// メッセージが投稿された場合の処理
-			fmt.Printf("Message: %v\n", ev)
+			//fmt.Printf("Message: %v\n", ev)
 
-			// 応答するメッセージを作成
-			_, _, err := api.PostMessage(ev.Channel, slack.MsgOptionText("Hello, you said: "+ev.Text, false))
-			if err != nil {
-				fmt.Printf("Failed to send message: %v\n", err)
+			// ボットへのメンションかどうかを確認
+			if strings.Contains(ev.Text, "<@"+botUserID+">") {
+				// メンションされたメッセージテキストを取得
+				// メンション部分を除去
+				text := strings.Replace(ev.Text, "<@"+botUserID+">", "", -1)
+				text = strings.TrimSpace(text)
+
+				// テキストを"*"に変換
+				maskedText := strings.Repeat("*", len(text))
+
+				// メンションしたユーザーに返信
+				_, _, err := api.PostMessage(ev.Channel, slack.MsgOptionText(maskedText, false), slack.MsgOptionTS(ev.Timestamp))
+				if err != nil {
+					fmt.Printf("Failed to send message: %v\n", err)
+				}
 			}
 		default:
 			// 他のイベントは無視
