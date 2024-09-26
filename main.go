@@ -18,10 +18,7 @@ import (
 
 // グローバル変数の定義
 var (
-	inputs         = map[string]interface{}{}
-	responseMode   = "streaming"
 	conversationID = ""
-	userID         = ""
 	apiKey         string
 )
 
