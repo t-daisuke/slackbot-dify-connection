@@ -5,7 +5,7 @@ difyのアプリをslackbotとして使いたいと思って作りました。
 
 # Needs
 - go環境を入れてください。
-- slackの管理者に問い合わせは必要です。
+- slack app を作成した後、slackの管理者に問い合わせと許可が必要です。
 
 
 # How to connect Slack
@@ -16,7 +16,25 @@ difyのアプリをslackbotとして使いたいと思って作りました。
 4. Basic InformationでApp-Level Tokenを作る。これをSLACK_APP_TOKENに設定する。
 5. OAuth & Permissionsで必要な権限をつけてBOT_USER_OAUTH_TOKENを取得する。これをSLACK_BOT_TOKENに設定する。
 6. それぞれ.env_exampleをコピーして.envを作成して、tokenを設定する。
-7. Event SubscriptionでSubscribe to bot eventsを選択する。
+7. Event SubscriptionでSubscribe to bot eventsを選択して、app_mentionを選択する。
+
+# slack api settings
+### App-Level Tokens
+connections:write
+authorizations:read
+
+### Socket Mode
+On
+
+### OAuth & Permissions
+app_mentions:read
+channels:join
+chat:write
+
+### Event Subscriptions
+On
+- Subscribe to bot events
+app_mention
 
 # Notion
 2024/09/26時点ではSocket Modeを推奨していたので、それに対応
