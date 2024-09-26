@@ -50,7 +50,7 @@ func loadEnv() (string, string) {
 
 	appToken := os.Getenv("SLACK_APP_TOKEN") // xapp-で始まるトークン
 	botToken := os.Getenv("SLACK_BOT_TOKEN") // xoxb-で始まるトークン
-	apiKey = os.Getenv("API_KEY")            // DifyのAPIキー
+	apiKey = os.Getenv("DIFY_API_KEY")       // DifyのAPIキー
 
 	if appToken == "" {
 		log.Fatalf("SLACK_APP_TOKEN is not set in .env file")
