@@ -48,6 +48,10 @@ func main() {
 	)
 	fmt.Println("Socket Mode client initialized.")
 
+	// Socket Modeクライアントを実行
+	go client.Run()
+	fmt.Println("Socket Mode client started.")
+
 	// ボットのユーザーIDを取得
 	authTest, err := api.AuthTest()
 	if err != nil {
