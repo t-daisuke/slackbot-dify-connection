@@ -21,6 +21,9 @@ https://zenn.dev/replica/articles/34b7fa8d667ec6
 6. それぞれ.env_exampleをコピーして.envを作成して、tokenを設定する。
 7. Event SubscriptionでSubscribe to bot eventsを選択する。
 
+# Notion
+2024/09/26時点ではSocket Modeを推奨していたので、それに対応
+
 Goのコードに移る前に、Slack側でボットの設定を行います。
 
 	1.	(Slack APIの管理ページ)[https://api.slack.com/apps?new_app=1]にアクセスし、新しいアプリを作成します。

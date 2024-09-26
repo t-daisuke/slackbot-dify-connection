@@ -8,6 +8,8 @@ import (
 
 	"github.com/joho/godotenv"
 	"github.com/slack-go/slack"
+	"github.com/slack-go/slack/slackevents"
+	"github.com/slack-go/slack/socketmode"
 )
 
 func main() {
@@ -19,16 +21,32 @@ func main() {
 	}
 	fmt.Println(".env file loaded successfully.")
 
-	// .envファイルからSLACK_BOT_TOKENを取得
-	token := os.Getenv("SLACK_BOT_TOKEN")
-	if token == "" {
+	// .envファイルからトークンを取得
+	appToken := os.Getenv("SLACK_APP_TOKEN") // xapp-で始まるトークン
+	botToken := os.Getenv("SLACK_BOT_TOKEN") // xoxb-で始まるトークン
+
+	if appToken == "" {
+		log.Fatalf("SLACK_APP_TOKEN is not set in .env file")
+	}
+	if botToken == "" {
 		log.Fatalf("SLACK_BOT_TOKEN is not set in .env file")
 	}
-	fmt.Println("SLACK_BOT_TOKEN retrieved successfully.")
+	fmt.Println("Tokens retrieved successfully.")
 
 	// Slack APIクライアントを作成
-	api := slack.New(token)
+	api := slack.New(
+		botToken,
+		slack.OptionAppLevelToken(appToken),
+		slack.OptionDebug(true),
+	)
 	fmt.Println("Slack API client initialized.")
+
+	// Socket Modeクライアントを作成
+	client := socketmode.New(
+		api,
+		socketmode.OptionDebug(true),
+	)
+	fmt.Println("Socket Mode client initialized.")
 
 	// ボットのユーザーIDを取得
 	authTest, err := api.AuthTest()
@@ -38,39 +56,41 @@ func main() {
 	botUserID := authTest.UserID
 	fmt.Printf("Bot User ID: %s\n", botUserID)
 
-	// WebSocketを使ってリアルタイムでイベントを処理
-	rtm := api.NewRTM()
-	go rtm.ManageConnection()
-	fmt.Println("WebSocket connection started.")
-
 	// イベントを処理するループ
-	for msg := range rtm.IncomingEvents {
-		//fmt.Println("Event received: ", msg)
+	for evt := range client.Events {
+		switch evt.Type {
+		case socketmode.EventTypeEventsAPI:
+			eventsAPIEvent, ok := evt.Data.(slackevents.EventsAPIEvent)
+			if !ok {
+				fmt.Printf("Could not type cast the event to EventsAPIEvent: %v\n", evt)
+				continue
+			}
+			client.Ack(*evt.Request)
 
-		switch ev := msg.Data.(type) {
-		case *slack.MessageEvent:
-			// メッセージが投稿された場合の処理
-			//fmt.Printf("Message: %v\n", ev)
+			switch eventsAPIEvent.Type {
+			case slackevents.CallbackEvent:
+				innerEvent := eventsAPIEvent.InnerEvent
+				switch ev := innerEvent.Data.(type) {
+				case *slackevents.AppMentionEvent:
+					// メンションされたメッセージテキストを取得
+					text := ev.Text
+					// メンション部分を除去
+					text = strings.Replace(text, "<@"+botUserID+">", "", -1)
+					text = strings.TrimSpace(text)
 
-			// ボットへのメンションかどうかを確認
-			if strings.Contains(ev.Text, "<@"+botUserID+">") {
-				// メンションされたメッセージテキストを取得
-				// メンション部分を除去
-				text := strings.Replace(ev.Text, "<@"+botUserID+">", "", -1)
-				text = strings.TrimSpace(text)
+					// テキストを"*"に変換
+					maskedText := strings.Repeat("*", len(text))
 
-				// テキストを"*"に変換
-				maskedText := strings.Repeat("*", len(text))
-
-				// メンションしたユーザーに返信
-				_, _, err := api.PostMessage(ev.Channel, slack.MsgOptionText(maskedText, false), slack.MsgOptionTS(ev.Timestamp))
-				if err != nil {
-					fmt.Printf("Failed to send message: %v\n", err)
+					// メンションしたユーザーに返信
+					_, _, err := api.PostMessage(ev.Channel, slack.MsgOptionText(maskedText, false))
+					if err != nil {
+						fmt.Printf("Failed to send message: %v\n", err)
+					}
 				}
 			}
 		default:
-			// 他のイベントは無視
-			fmt.Println("Unhandled event type")
+			// その他のイベントタイプを無視
+			fmt.Printf("Ignored event: %v\n", evt.Type)
 		}
 	}
 }
