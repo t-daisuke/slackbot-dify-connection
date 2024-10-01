@@ -17,6 +17,7 @@ difyのアプリをslackbotとして使いたいと思って作りました。
 5. OAuth & Permissionsで必要な権限をつけてBOT_USER_OAUTH_TOKENを取得する。これをSLACK_BOT_TOKENに設定する。
 6. それぞれ.env_exampleをコピーして.envを作成して、tokenを設定する。
 7. Event SubscriptionでSubscribe to bot eventsを選択して、app_mentionを選択する。
+8. App HomeでApp Display Name, Bot Nameを設定する。
 
 # slack api settings
 ### App-Level Tokens
