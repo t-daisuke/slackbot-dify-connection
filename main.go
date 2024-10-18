@@ -166,10 +166,11 @@ func handleAppMentionEvent(ev *slackevents.AppMentionEvent, api *slack.Client, b
 func callDifyAPI(query string, userID string) (string, error) {
 	// リクエストボディを作成
 	requestBody := map[string]interface{}{
-		"inputs":        map[string]interface{}{}, // 空のオブジェクト
-		"query":         query,
-		"response_mode": "blocking",
-		"user":          userID,
+		"inputs":          map[string]interface{}{}, // 空のオブジェクト
+		"query":           query,
+		"response_mode":   "blocking",
+		"user":            userID,
+		"conversation_id": conversationID,
 	}
 
 	// JSONにシリアライズ
@@ -212,7 +213,7 @@ func callDifyAPI(query string, userID string) (string, error) {
 	// ステータスコードをチェック
 	if resp.StatusCode != http.StatusOK {
 		// エラーメッセージを表示
-		fmt.Printf("Received non-OK HTTP status: %s\nResponse body: %s\n", resp.Status, string(body))
+		fmt.Printf("Received non-OK HTTP status from Dify API: %s\nResponse body: %s\n", resp.Status, string(body))
 		return "", fmt.Errorf("non-OK HTTP status: %s", resp.Status)
 	}
 
