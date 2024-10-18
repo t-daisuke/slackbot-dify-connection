@@ -139,6 +139,7 @@ func handleCallbackEvent(innerEvent slackevents.EventsAPIInnerEvent, api *slack.
 // メンションイベントの処理
 func handleAppMentionEvent(ev *slackevents.AppMentionEvent, api *slack.Client, botUserID string) {
 	fmt.Printf("Received AppMentionEvent: %v\n", ev)
+	fmt.Printf("AppMentionEvent - User: %s, Channel: %s, Text: %s\n", ev.User, ev.Channel, ev.Text)
 	// メンションされたメッセージテキストを取得
 	text := ev.Text
 	// メンション部分を除去
