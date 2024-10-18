@@ -18,9 +18,9 @@ import (
 
 // グローバル変数の定義
 var (
-	conversationID = ""
-	apiKey         string
-	difyAPIURL     string
+	// conversationID = ""
+	apiKey     string
+	difyAPIURL string
 )
 
 func main() {
@@ -232,7 +232,7 @@ func callDifyAPI(query string, userID string) (string, error) {
 	}
 
 	// 会話IDを更新（必要に応じて）
-	conversationID = responseData.ConversationID
+	// conversationID = responseData.ConversationID
 
 	return responseData.Answer, nil
 }
