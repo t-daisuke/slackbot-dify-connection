@@ -145,7 +145,7 @@ func handleAppMentionEvent(ev *slackevents.AppMentionEvent, api *slack.Client, b
 	text = strings.TrimSpace(text)
 
 	// Dify APIにリクエストを送信
-	answer, err := callDifyAPI(text, ev.User)
+	answer, err := callDifyAPI(text)
 	if err != nil {
 		// エラーが発生した場合、Difyアプリに問題が発生しました」と返信
 		_, _, err := api.PostMessage(ev.Channel, slack.MsgOptionText("Difyアプリに問題が発生しました", false), slack.MsgOptionTS(ev.TimeStamp))
@@ -163,13 +163,13 @@ func handleAppMentionEvent(ev *slackevents.AppMentionEvent, api *slack.Client, b
 }
 
 // Dify APIへのリクエスト
-func callDifyAPI(query string, userID string) (string, error) {
+func callDifyAPI(query string) (string, error) {
 	// リクエストボディを作成
 	requestBody := map[string]interface{}{
 		"inputs":          map[string]interface{}{}, // 空のオブジェクト
 		"query":           query,
 		"response_mode":   "blocking",
-		"user":            userID,
+		"user":            "abc-123", // botなのでダミーにした
 		"conversation_id": conversationID,
 	}
 
