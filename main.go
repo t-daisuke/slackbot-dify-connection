@@ -147,8 +147,8 @@ func handleAppMentionEvent(ev *slackevents.AppMentionEvent, api *slack.Client, b
 	// Dify APIにリクエストを送信
 	answer, err := callDifyAPI(text, ev.User)
 	if err != nil {
-		// エラーが発生した場合、「アプリに問題が発生しました」と返信
-		_, _, err := api.PostMessage(ev.Channel, slack.MsgOptionText("アプリに問題が発生しました", false), slack.MsgOptionTS(ev.TimeStamp))
+		// エラーが発生した場合、Difyアプリに問題が発生しました」と返信
+		_, _, err := api.PostMessage(ev.Channel, slack.MsgOptionText("Difyアプリに問題が発生しました", false), slack.MsgOptionTS(ev.TimeStamp))
 		if err != nil {
 			fmt.Printf("Failed to send error message: %v\n", err)
 		}
