@@ -7,6 +7,10 @@ difyのアプリをslackbotとして使いたいと思って作りました。
 - go環境を入れてください。
 - slack app を作成した後、slackの管理者に問い合わせと許可が必要です。
 
+# Difyについて
+今回はChatFlowのものになっています。
+ワークフローの時はRespponseの時にちょっと変更が入ります。
+
 
 # How to connect Slack
 
