@@ -39,6 +39,12 @@ On
 - Subscribe to bot events
 app_mention
 
+# 設定できたら...
+```
+go run main.go
+```
+で行けます。
+
 # Notion
 2024/09/26時点ではSocket Modeを推奨していたので、それに対応
 
